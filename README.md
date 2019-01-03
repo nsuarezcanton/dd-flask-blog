@@ -66,9 +66,9 @@ Create a file under `env` called `secret.env` . The contents of this file should
 DD_API_KEY=<your-api-key>
 ```
 
-It can be quickly built along quick the Datadog Agent. Need to figure whether it’s properly setup—logs look fishy (🐠).
-
 #### Running the App
+
+It can be quickly built along quick the Datadog Agent as shown below. Need to figure whether it’s properly setup—logs look fishy (🐠).
 
 ```bash
 $ docker-compose up
@@ -85,3 +85,50 @@ $ curl localhost:8080
 After hitting the applications endpoints a few times and giving it a few minutes, you should be able to see Traces. Also, given the provided Datadog config (`env/datadog.env`) , you should be able to see the applications logs. Here's an example trace:
 
 <img src="/readme-assets/trace_example.gif" alt="Example Datadog APM Trace">
+
+## WIP: Kubernetes
+
+The Kubernetes deployment part of this example is still WIP. You can deploy the application to `minikube` but the Datadog part of this setup is not complete.
+
+### Start `minikube`
+
+```bash
+# Start me up
+$ minikube start
+# Configure Docker environment
+$ eval $(minikube docker-env)
+# Build blog:latest
+$ docker build ./blog -t blog:latest
+```
+
+**Note:** the _build_ command is important. Otherwise, `minikube` won’t find the image for the application.
+
+### Build environment secrets
+
+Create a file under `kuberbetes` called `dd_secret.txt` . The contents of this file should look like:
+
+```
+DD_API_KEY=<your-api-key>
+```
+
+Use `kubectl` to build a secret that will be passed into the Datadog Agent pod with your API key.
+
+```bash
+$ kubectl create secret generic datadog --from-env-file=kubernetes/dd_secret.txt
+```
+
+### Agent
+
+```bash
+# Deploy agent to Kubernetes cluster
+$ kubectl apply -f kubernetes/agent_deploy.yaml
+```
+
+### Application
+
+```bash
+# Deploy app to Kubernetes cluster
+$ kubectl apply -f kubernetes/blog_deploy.yaml
+# and you can hit it up from localhost:8080
+$ kubectl port-forward deployment/blog 8080:8080
+```
