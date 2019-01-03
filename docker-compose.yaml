@@ -1,0 +1,29 @@
+version: "3"
+services:
+  agent:
+    image: "datadog/agent:6.8.3"
+    env_file:
+      - env/secret.env
+      - env/datadog.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+  blog:
+    build:
+      context: ./blog
+      dockerfile: Dockerfile
+      args:
+        FLASK_APP: "app"
+        FLASK_ENV: "development"
+    env_file:
+      - env/datadog.env
+    environment:
+      FLASK_APP: "app"
+      FLASK_ENV: "development"
+    volumes:
+      - ./blog:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - agent
